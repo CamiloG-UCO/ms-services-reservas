@@ -5,8 +5,6 @@ import co.edu.hotel.reservaservice.repository.IBookingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 public class BookingService {
 
@@ -17,17 +15,26 @@ public class BookingService {
         this.bookingRepository = bookingRepository;
     }
 
-    public void deleteBookingByRoomCode(String email, String roomCode){
-        Booking booking = findByRoomCode(email, roomCode);
+    public Booking findByRoomCode(String email, String roomCode) {
+        if (email == null || email.isBlank() || roomCode == null || roomCode.isBlank()) {
+            throw new IllegalArgumentException("El correo o el código de habitación no pueden estar vacíos");
+        }
 
-        bookingRepository.delete(booking);
+        Booking booking = bookingRepository.findByRoomCodeAndClientEmail(roomCode, email);
+        if (booking == null) {
+            throw new IllegalArgumentException("No existe reserva con el código " + roomCode);
+        }
+
+        return booking;
     }
 
-    public Booking findByRoomCode(String email, String code) {
-        if  (this.bookingRepository.findByRoomCodeAndClientEmail(code, email) != null) {
-            return this.bookingRepository.findByRoomCodeAndClientEmail(code,  email);
-        } else {
-            throw new IllegalArgumentException("No existe reserva con el codigo "+code);
+    public void deleteBookingByRoomCode(String email, String roomCode) {
+        Booking booking = findByRoomCode(email, roomCode);
+
+        try {
+            bookingRepository.delete(booking);
+        } catch (RuntimeException e) {
+            throw new RuntimeException("No fue posible cancelar la reserva en este momento. Intente más tarde.");
         }
     }
 }
