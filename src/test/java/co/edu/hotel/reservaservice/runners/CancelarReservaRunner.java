@@ -9,7 +9,11 @@ import org.junit.runner.RunWith;
         features = "src/test/resources/features",
         glue = "co.edu.hotel.reservaservice.steps",
         snippets = CucumberOptions.SnippetType.CAMELCASE,
-        plugin = {"pretty"},
+        plugin = {
+                "pretty",
+                "json:target/cucumber-reports/CucumberTestReport.json",
+                "html:target/cucumber-reports/html-report.html"
+        },
         monochrome = true
 )
 public class CancelarReservaRunner {
