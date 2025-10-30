@@ -27,7 +27,7 @@ public class BookingService {
         if  (this.bookingRepository.findByRoomCodeAndClientEmail(code, email) != null) {
             return this.bookingRepository.findByRoomCodeAndClientEmail(code,  email);
         } else {
-            throw new IllegalArgumentException("No existe reserva con el codigo "+code+" que pertenezca al usuario "+email);
+            throw new IllegalArgumentException("No existe reserva con el codigo "+code);
         }
     }
 }
