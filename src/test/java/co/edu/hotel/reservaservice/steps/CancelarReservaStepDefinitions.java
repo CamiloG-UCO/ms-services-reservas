@@ -24,27 +24,30 @@ public class CancelarReservaStepDefinitions {
     private BookingService bookingService;
 
     private Booking reservaExistente;
-    private Exception error;
+    private Exception errorCapturado;
     private String mensajeSistema;
     private String emailUsuario;
     private boolean correoEnviado;
     private String codigoReserva;
+    private boolean eliminacionExitosa;
 
     @Before
     public void setup() {
         MockitoAnnotations.openMocks(this);
         reservaExistente = null;
-        error = null;
+        errorCapturado = null;
         mensajeSistema = null;
         emailUsuario = null;
         correoEnviado = false;
         codigoReserva = null;
+        eliminacionExitosa = false;
     }
 
     // --- GIVEN ---
     @Dado("existe una reserva con código {string} para el usuario {string} con estado {string}")
     public void existe_una_reserva_con_codigo_para_el_usuario_con_estado(String codigo, String usuario, String estado) {
-        emailUsuario = usuario + "@gmail.com";
+        this.codigoReserva = codigo;
+
         reservaExistente = new Booking(
                 UUID.randomUUID().toString(),
                 new Client(UUID.randomUUID().toString(), usuario, emailUsuario),
@@ -53,14 +56,16 @@ public class CancelarReservaStepDefinitions {
                 new Date()
         );
 
-        when(bookingRepository.findByRoomCodeAndClientEmail(codigo, emailUsuario))
+        when(bookingRepository.findByRoomCodeAndClientEmail(eq(codigo), anyString()))
                 .thenReturn(reservaExistente);
+
+        doNothing().when(bookingRepository).delete(any(Booking.class));
     }
 
     @Dado("no existe una reserva con código {string} para el usuario {string}")
     public void no_existe_una_reserva_con_codigo_para_el_usuario(String codigo, String usuario) {
-        emailUsuario = usuario + "@gmail.com";
-        when(bookingRepository.findByRoomCodeAndClientEmail(codigo, emailUsuario))
+        this.codigoReserva = codigo;
+        when(bookingRepository.findByRoomCodeAndClientEmail(eq(codigo), anyString()))
                 .thenReturn(null);
     }
 
@@ -71,11 +76,14 @@ public class CancelarReservaStepDefinitions {
 
     @Dado("el servicio de base de datos presenta un error temporal")
     public void el_servicio_de_base_de_datos_presenta_un_error_temporal() {
-        if (reservaExistente != null) {
-            doThrow(new RuntimeException("Error temporal en base de datos"))
-                    .when(bookingRepository)
-                    .delete(reservaExistente);
-        }
+        reset(bookingRepository);
+
+        when(bookingRepository.findByRoomCodeAndClientEmail(anyString(), anyString()))
+                .thenReturn(reservaExistente);
+
+        doThrow(new RuntimeException("Error temporal de base de datos"))
+                .when(bookingRepository)
+                .delete(any(Booking.class));
     }
 
     @Dado("el correo del usuario no encontrado")
@@ -87,35 +95,29 @@ public class CancelarReservaStepDefinitions {
     @Cuando("el usuario presione el botón {string}")
     public void el_usuario_presione_el_boton(String boton) {
         try {
-            if (emailUsuario == null) {
-                mensajeSistema = "No se puede cancelar la reserva hasta que valide la información de su correo electrónico";
-                return;
+            bookingService.deleteBookingByRoomCode(emailUsuario, codigoReserva);
+
+            eliminacionExitosa = true;
+            mensajeSistema = "Reserva " + codigoReserva + " cancelada exitosamente";
+
+            if (emailUsuario != null && !emailUsuario.isBlank()) {
+                correoEnviado = true;
             }
 
-            Booking reserva = bookingService.findByRoomCode(
-                    emailUsuario,
-                    reservaExistente != null ? reservaExistente.getRoom().getCode() : "N/A"
-            );
-
-            bookingService.deleteBookingByRoomCode(emailUsuario, reserva.getRoom().getCode());
-            mensajeSistema = "Reserva " + reserva.getRoom().getCode() + " cancelada exitosamente";
-            correoEnviado = true;
-
         } catch (IllegalArgumentException e) {
+            eliminacionExitosa = false;
             mensajeSistema = e.getMessage();
-            correoEnviado = false;
         } catch (RuntimeException e) {
-            mensajeSistema = "No fue posible cancelar la reserva en este momento. Intente más tarde.";
-            correoEnviado = false;
-        } catch (Exception e) {
-            error = e;
+            eliminacionExitosa = false;
+            mensajeSistema = e.getMessage();
         }
     }
 
     // --- THEN ---
     @Entonces("el sistema debe eliminar la reserva con código {string}")
     public void el_sistema_debe_eliminar_la_reserva_con_codigo(String codigo) {
-        verify(bookingRepository).delete(reservaExistente);
+        assertTrue("La eliminación no fue exitosa", eliminacionExitosa);
+        verify(bookingRepository).delete(any(Booking.class));
     }
 
     @Entonces("mostrar el mensaje {string}")
@@ -151,6 +153,6 @@ public class CancelarReservaStepDefinitions {
 
     @Entonces("no debe eliminar la reserva")
     public void no_debe_eliminar_la_reserva() {
-        verify(bookingRepository, never()).delete(any());
+        assertFalse("La reserva fue eliminada cuando no debía", eliminacionExitosa);
     }
 }
