@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -21,8 +22,10 @@ public class bookingController {
 
     @GetMapping("/dummy")
     public ResponseEntity<Booking> getDummy(){
-        Booking booking = new Booking(UUID.randomUUID().toString(), new Client(UUID.randomUUID().toString(), "test", "Test@email.com"), new Room(UUID.randomUUID().toString(), "R-321", new Hotel(UUID.randomUUID().toString(), "BUG HOTEL")), new Status(UUID.randomUUID().toString(), "Confirmed"), new Date());
-        return ResponseEntity.ok(booking);
+        String randomRoomCode = "R-" + (int)(Math.random() * 1000);
+        Booking booking = new Booking(UUID.randomUUID().toString(), new Client(UUID.randomUUID().toString(), "test", "Test@email.com"), new Room(UUID.randomUUID().toString(), randomRoomCode, new Hotel(UUID.randomUUID().toString(), "BUG HOTEL")), new Status(UUID.randomUUID().toString(), "Confirmed"), new Date());
+        Booking savedBooking = bookingService.saveBooking(booking);
+        return ResponseEntity.ok(savedBooking);
     }
 
     @GetMapping("/client/{UserEmail}/room/{RoomCode}")
@@ -39,5 +42,15 @@ public class bookingController {
             return ResponseEntity.noContent().build();
         }
 
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<Booking>> getAllBookings(){
+        try {
+            List<Booking> bookings = bookingService.findAllBookings();
+            return ResponseEntity.ok(bookings);
+        } catch (Exception ex) {
+            return ResponseEntity.noContent().build();
+        }
     }
 }

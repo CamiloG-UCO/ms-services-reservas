@@ -41,4 +41,15 @@ public class BookingService {
             throw new RuntimeException("No fue posible cancelar la reserva en este momento. Intente más tarde.", e);
         }
     }
+
+    public java.util.List<Booking> findAllBookings() {
+        return bookingRepository.findAll();
+    }
+
+    public Booking saveBooking(Booking booking) {
+        if (booking == null) {
+            throw new IllegalArgumentException("La reserva no puede ser nula");
+        }
+        return bookingRepository.save(booking);
+    }
 }
