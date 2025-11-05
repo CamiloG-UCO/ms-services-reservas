@@ -9,7 +9,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
@@ -56,17 +59,19 @@ public class CancelarReservaStepDefinitions {
                 new Date()
         );
 
-        when(bookingRepository.findByRoomCodeAndClientEmail(eq(codigo), anyString()))
-                .thenReturn(reservaExistente);
+        List<Booking> listaReservas = new ArrayList<>();
+        listaReservas.add(reservaExistente);
 
-        doNothing().when(bookingRepository).delete(any(Booking.class));
+        when(bookingRepository.findByRoomCodeAndClientEmail(eq(codigo), anyString()))
+                .thenReturn(listaReservas);
+
+        doNothing().when(bookingRepository).deleteAll(anyList());
     }
 
     @Dado("no existe una reserva con código {string} para el usuario {string}")
     public void no_existe_una_reserva_con_codigo_para_el_usuario(String codigo, String usuario) {
         this.codigoReserva = codigo;
         when(bookingRepository.findByRoomCodeAndClientEmail(eq(codigo), anyString()))
-                .thenReturn(null);
     }
 
     @Dado("el correo del usuario es {string}")

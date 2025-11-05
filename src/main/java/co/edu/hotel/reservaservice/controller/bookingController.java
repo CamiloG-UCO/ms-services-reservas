@@ -5,7 +5,6 @@ import co.edu.hotel.reservaservice.services.booking.BookingService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -22,7 +21,7 @@ public class bookingController {
 
     @GetMapping("/dummy")
     public ResponseEntity<Booking> getDummy(){
-        String randomRoomCode = "R-" + (int)(Math.random() * 1000);
+        String randomRoomCode = "R" + (int)(Math.random() * 1000);
         Booking booking = new Booking(UUID.randomUUID().toString(), new Client(UUID.randomUUID().toString(), "test", "Test@email.com"), new Room(UUID.randomUUID().toString(), randomRoomCode, new Hotel(UUID.randomUUID().toString(), "BUG HOTEL")), new Status(UUID.randomUUID().toString(), "Confirmed"), new Date());
         Booking savedBooking = bookingService.saveBooking(booking);
         return ResponseEntity.ok(savedBooking);
@@ -38,8 +37,10 @@ public class bookingController {
         try {
             bookingService.deleteBookingByRoomCode(UserEmail, RoomCode);
             return ResponseEntity.ok("Reserva eliminada con exito");
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
         } catch (Exception ex) {
-            return ResponseEntity.noContent().build();
+            return ResponseEntity.internalServerError().body("Error al eliminar la reserva: " + ex.getMessage());
         }
 
     }
@@ -50,7 +51,7 @@ public class bookingController {
             List<Booking> bookings = bookingService.findAllBookings();
             return ResponseEntity.ok(bookings);
         } catch (Exception ex) {
-            return ResponseEntity.noContent().build();
+            return ResponseEntity.internalServerError().build();
         }
     }
 }
