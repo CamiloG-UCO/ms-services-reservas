@@ -1,4 +1,4 @@
-package co.edu.hotel.reservaservice.bdd;
+package co.edu.hotel.reservaservice.steps;
 
 import co.edu.hotel.reservaservice.dto.ReservationRequest;
 import co.edu.hotel.reservaservice.dto.ReservationResponse;
@@ -14,6 +14,7 @@ import io.cucumber.java.es.Cuando;
 import io.cucumber.java.es.Dado;
 import io.cucumber.java.es.Entonces;
 import io.cucumber.java.es.Y;
+import io.cucumber.spring.CucumberContextConfiguration;
 import org.junit.jupiter.api.Assertions;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -28,7 +29,8 @@ import java.util.Optional;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-public class ReservationStepDefinitions {
+@CucumberContextConfiguration
+public class CrearReservaStepDefinitions {
 
     @Mock
     private ReservationRepository reservationRepository;
@@ -52,7 +54,7 @@ public class ReservationStepDefinitions {
     private Exception thrownException;
     private long startTime;
 
-    public ReservationStepDefinitions() {
+    public CrearReservaStepDefinitions() {
         MockitoAnnotations.openMocks(this);
     }
 
@@ -69,7 +71,6 @@ public class ReservationStepDefinitions {
         testRoom.setType("Premium");
         testRoom.setDescription("Habitación premium con vista al mar");
 
-        // Mock repository behavior based on room status
         if ("disponible".equals(estado)) {
             when(roomRepository.findByIdAndStatus(anyString(), eq("disponible")))
                     .thenReturn(Optional.of(testRoom));
@@ -112,7 +113,6 @@ public class ReservationStepDefinitions {
         reservationRequest.setStartDate(LocalDate.parse(fechaInicio));
         reservationRequest.setEndDate(LocalDate.parse(fechaFinal));
 
-        // Mock successful reservation save
         Reservation savedReservation = new Reservation();
         savedReservation.setId("reservation-1");
         savedReservation.setReservationCode("R-8791");
@@ -133,15 +133,13 @@ public class ReservationStepDefinitions {
         when(reservationRepository.save(any(Reservation.class)))
                 .thenReturn(savedReservation);
 
-        // Mock no conflicting reservations for successful cases
-        if (testRoom != null && "disponible".equals(testRoom.getStatus()) && 
+        if (testRoom != null && "disponible".equals(testRoom.getStatus()) &&
             !fechaInicio.equals("2023-12-12") && 
             reservationRepository.findConflictingReservations(anyString(), any(LocalDate.class), any(LocalDate.class)).isEmpty()) {
             when(reservationRepository.findConflictingReservations(anyString(), any(LocalDate.class), any(LocalDate.class)))
                     .thenReturn(Collections.emptyList());
         }
 
-        // Record start time for performance testing
         startTime = System.currentTimeMillis();
 
         try {
@@ -151,22 +149,19 @@ public class ReservationStepDefinitions {
         }
     }
 
-    @Entonces("antes de 5 segundos el sistema debe mostrar {string}")
-    public void antesDeSegundosElSistemaDebeMostrar(String mensajeEsperado) {
+    @Entonces("antes de {int} segundos el sistema debe mostrar {string}")
+    public void antesDeSegundosElSistemaDebeMostrar(Integer demora, String mensajeEsperado) {
         long endTime = System.currentTimeMillis();
         long executionTime = endTime - startTime;
 
-        // Verify execution time is less than 5 seconds (5000 ms)
-        Assertions.assertTrue(executionTime < 5000, 
-                "La operación tardó más de 5 segundos: " + executionTime + "ms");
+        Assertions.assertTrue(executionTime < demora*1000,
+                "La operación tardó más de " + demora + " segundos: " + executionTime + "ms");
 
-        // Verify successful response
         Assertions.assertNotNull(reservationResponse, "La respuesta no debe ser null");
         Assertions.assertNotNull(reservationResponse.getMessage(), "El mensaje no debe ser null");
         Assertions.assertTrue(reservationResponse.getMessage().contains(mensajeEsperado),
                 "El mensaje debe contener: " + mensajeEsperado + ", pero fue: " + reservationResponse.getMessage());
 
-        // Verify reservation details
         Assertions.assertEquals("R-8791", reservationResponse.getReservationCode());
         Assertions.assertEquals("juan.perez", reservationResponse.getUsername());
         Assertions.assertEquals("Premium vista al mar", reservationResponse.getRoomName());
@@ -177,10 +172,8 @@ public class ReservationStepDefinitions {
 
     @Y("enviar un correo de confirmación a {string}")
     public void enviarUnCorreoDeConfirmacionA(String email) {
-        // Verify that email service was called
         verify(emailService, times(1)).sendReservationConfirmation(any(Reservation.class));
-        
-        // Verify email matches expected
+
         Assertions.assertEquals(email, reservationResponse.getUserEmail());
     }
 
