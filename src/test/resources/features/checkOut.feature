@@ -11,3 +11,14 @@ Feature: Generar factura post check-out
     Then el sistema debe generar la factura con código "F-1203" con costo total "2500000.0"
     And enviar una copia PDF al correo "juan.perez@gmail.com"
 
+  Scenario: Intentar generar factura para una reserva ya completada
+    Given la reserva "R-8791" con estado "completada" del cliente "juan.perez" con costo total "2500000.0"
+    When el recepcionista intente marcar "Check-out realizado"
+    Then el sistema debe mostrar "La reserva ya fue completada"
+    And no debe generar una nueva factura
+
+  Scenario: Intentar generar factura para una reserva inexistente
+    Given no existe una reserva con código "R-9999"
+    When el recepcionista intente marcar "Check-out realizado"
+    Then el sistema debe mostrar "Reserva no encontrada"
+    And no debe generarse ninguna factura
