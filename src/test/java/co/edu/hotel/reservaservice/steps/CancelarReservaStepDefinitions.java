@@ -5,6 +5,7 @@ import co.edu.hotel.reservaservice.repository.IBookingRepository;
 import co.edu.hotel.reservaservice.services.booking.BookingService;
 import io.cucumber.java.Before;
 import io.cucumber.java.es.*;
+import io.cucumber.spring.CucumberContextConfiguration;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;

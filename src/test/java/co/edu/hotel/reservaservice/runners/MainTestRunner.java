@@ -16,5 +16,5 @@ import org.junit.runner.RunWith;
         },
         monochrome = true
 )
-public class CancelarReservaRunner {
+public class MainTestRunner {
 }
