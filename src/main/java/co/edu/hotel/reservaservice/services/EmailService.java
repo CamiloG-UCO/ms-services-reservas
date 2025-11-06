@@ -1,5 +1,6 @@
 package co.edu.hotel.reservaservice.services;
 
+import co.edu.hotel.reservaservice.model.Bill;
 import co.edu.hotel.reservaservice.model.Reservation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +37,24 @@ public class EmailService {
         }
     }
 
+    public void sendBill(Bill bill) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
+            message.setTo(bill.getEmail());
+            message.setSubject("Factura de check-out - " + bill.getCode());
+
+            String emailBody = buildBillnEmailBody(bill);
+            message.setText(emailBody);
+
+            mailSender.send(message);
+            log.info("Confirmation email sent to: {}", bill.getEmail());
+
+        } catch (Exception e) {
+            log.error("Error sending confirmation email to: {}", bill.getEmail(), e);
+        }
+    }
+
     private String buildConfirmationEmailBody(Reservation reservation) {
         return String.format(
             "Estimado/a %s,\n\n" +
@@ -57,6 +76,30 @@ public class EmailService {
             reservation.getStartDate(),
             reservation.getEndDate(),
             reservation.getTotalAmount()
+        );
+    }
+
+    private String buildBillnEmailBody(Bill  bill) {
+        return String.format(
+                "Estimado/a %s,\n\n" +
+                "Su check-out ha sido completado exitosamente.\n\n" +
+                "Detalles de la factura:\n" +
+                "- Código: %s\n" +
+                "- Código de reserva: %s\n" +
+                "- Total: %s\n" +
+                "- Fecha: %s\n" +
+                "- Hotel: %s\n" +
+                "- Habitación: %s\n" +
+                "Gracias por elegirnos.\n\n" +
+                "Atentamente,\n" +
+                "Equipo de Reservas",
+                bill.getUsername(),
+                bill.getCode(),
+                bill.getReservationCode(),
+                bill.getTotal(),
+                bill.getDate(),
+                bill.getHotel(),
+                bill.getRoom()
         );
     }
 }
