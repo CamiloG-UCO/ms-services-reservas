@@ -85,7 +85,7 @@ public class ReservationService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + username));
 
-        List<Reservation> reservations = reservationRepository.findByUserId(user.getId());
+        List<Reservation> reservations = reservationRepository.findByUserEmail(user.getEmail());
         return reservations.stream()
                 .map(reservation -> mapToResponse(reservation, null))
                 .toList();

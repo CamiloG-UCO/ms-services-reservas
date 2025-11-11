@@ -16,6 +16,8 @@ public interface ReservationRepository extends MongoRepository<Reservation, Stri
 
     List<Reservation> findByUserId(String userId);
 
+    List<Reservation> findByUserEmail(String email);
+
     List<Reservation> findByRoomId(String roomId);
 
     @Query("{ 'roomId': ?0, 'status': 'confirmada', " +
