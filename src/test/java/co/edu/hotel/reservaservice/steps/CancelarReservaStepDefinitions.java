@@ -66,13 +66,15 @@ public class CancelarReservaStepDefinitions {
         when(bookingRepository.findByRoomCodeAndClientEmail(eq(codigo), anyString()))
                 .thenReturn(listaReservas);
 
-        doNothing().when(bookingRepository).deleteAll(anyList());
+        when(bookingRepository.save(any(Booking.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     @Dado("no existe una reserva con código {string} para el usuario {string}")
     public void no_existe_una_reserva_con_codigo_para_el_usuario(String codigo, String usuario) {
         this.codigoReserva = codigo;
         when(bookingRepository.findByRoomCodeAndClientEmail(eq(codigo), anyString()))
+                .thenReturn(Collections.emptyList());
     }
 
     @Dado("el correo del usuario es {string}")
@@ -82,14 +84,15 @@ public class CancelarReservaStepDefinitions {
 
     @Dado("el servicio de base de datos presenta un error temporal")
     public void el_servicio_de_base_de_datos_presenta_un_error_temporal() {
-        reset(bookingRepository);
+        List<Booking> listaReservas = new ArrayList<>();
+        listaReservas.add(reservaExistente);
 
         when(bookingRepository.findByRoomCodeAndClientEmail(anyString(), anyString()))
-                .thenReturn(reservaExistente);
+                .thenReturn(listaReservas);
 
         doThrow(new RuntimeException("Error temporal de base de datos"))
                 .when(bookingRepository)
-                .delete(any(Booking.class));
+                .save(any(Booking.class));
     }
 
     @Dado("el correo del usuario no encontrado")
@@ -125,7 +128,7 @@ public class CancelarReservaStepDefinitions {
     @Entonces("el sistema debe eliminar la reserva con código {string}")
     public void el_sistema_debe_eliminar_la_reserva_con_codigo(String codigo) {
         assertTrue("La eliminación no fue exitosa", eliminacionExitosa);
-        verify(bookingRepository).delete(any(Booking.class));
+        verify(bookingRepository, atLeastOnce()).save(any(Booking.class));
     }
 
     @Entonces("mostrar el mensaje {string}")
