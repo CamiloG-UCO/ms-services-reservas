@@ -53,10 +53,10 @@ public class DataInitializer implements CommandLineRunner {
             }
 
             // Create test user if it doesn't exist
-            if (userRepository.findByUsername("danielpuerta5789@gmail.com").isEmpty()) {
+            if (userRepository.findByUsername("juan.perez").isEmpty()) {
                 User user = new User();
-                user.setUsername("danielpuerta5789@gmail.com");
-                user.setEmail("danielpuerta5789@gmail.com");
+                user.setUsername("juan.perez");
+                user.setEmail("juan.perez@gmail.com");
                 user.setFirstName("Juan");
                 user.setLastName("Pérez");
                 user.setPhone("+57 300 123 4567");
