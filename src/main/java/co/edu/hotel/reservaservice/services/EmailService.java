@@ -1,5 +1,6 @@
 package co.edu.hotel.reservaservice.services;
 
+import co.edu.hotel.reservaservice.model.Bill;
 import co.edu.hotel.reservaservice.model.Reservation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +37,24 @@ public class EmailService {
         }
     }
 
+    public void sendCancellationEmail(Reservation reservation) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
+            message.setTo(reservation.getUserEmail());
+            message.setSubject("Cancelación de Reserva - " + reservation.getReservationCode());
+
+            String emailBody = buildCancellationEmailBody(reservation);
+            message.setText(emailBody);
+
+            mailSender.send(message);
+            log.info("Cancellation email sent to: {}", reservation.getUserEmail());
+
+        } catch (Exception e) {
+            log.error("Error sending cancellation email to: {}", reservation.getUserEmail(), e);
+        }
+    }
+
     private String buildConfirmationEmailBody(Reservation reservation) {
         return String.format(
             "Estimado/a %s,\n\n" +
@@ -58,5 +77,32 @@ public class EmailService {
             reservation.getEndDate(),
             reservation.getTotalAmount()
         );
+    }
+
+    private String buildCancellationEmailBody(Reservation reservation) {
+        return String.format(
+            "Estimado/a %s,\n\n" +
+            "Su reserva ha sido cancelada exitosamente.\n\n" +
+            "Detalles de la reserva cancelada:\n" +
+            "- Código de reserva: %s\n" +
+            "- Hotel: %s\n" +
+            "- Habitación: %s\n" +
+            "- Fecha de inicio: %s\n" +
+            "- Fecha de fin: %s\n" +
+            "- Monto: $%.2f\n\n" +
+            "Si tiene alguna pregunta, no dude en contactarnos.\n\n" +
+            "Atentamente,\n" +
+            "Equipo de Reservas",
+            reservation.getUsername(),
+            reservation.getReservationCode(),
+            reservation.getHotelName(),
+            reservation.getRoomName(),
+            reservation.getStartDate(),
+            reservation.getEndDate(),
+            reservation.getTotalAmount()
+        );
+    }
+
+    public void sendBill(Bill savedBill) {
     }
 }

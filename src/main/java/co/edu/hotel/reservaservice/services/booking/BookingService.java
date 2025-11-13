@@ -25,7 +25,6 @@ public class BookingService {
             throw new IllegalArgumentException("No existe una reserva con el código " + roomCode);
         }
 
-        // Retornar la primera reserva encontrada
         return bookings.get(0);
     }
 
@@ -45,12 +44,17 @@ public class BookingService {
         }
 
         try {
-            // Eliminar todas las reservas encontradas
-            bookingRepository.deleteAll(bookings);
+            for (Booking booking : bookings) {
+                if (!booking.isCancelled()) {
+                    booking.cancelBooking("Cancelada por el usuario");
+                    bookingRepository.save(booking);
+                }
+            }
         } catch (RuntimeException e) {
             throw new RuntimeException("No fue posible cancelar la reserva en este momento. Intente más tarde.", e);
         }
     }
+
 
     public java.util.List<Booking> findAllBookings() {
         return bookingRepository.findAll();

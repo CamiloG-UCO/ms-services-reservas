@@ -113,9 +113,11 @@ public class CancelarReservaStepDefinitions {
         } catch (IllegalArgumentException e) {
             eliminacionExitosa = false;
             mensajeSistema = e.getMessage();
+            correoEnviado = false;
         } catch (RuntimeException e) {
             eliminacionExitosa = false;
             mensajeSistema = e.getMessage();
+            correoEnviado = false;
         }
     }
 
