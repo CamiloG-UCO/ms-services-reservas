@@ -30,4 +30,5 @@ public class Reservation {
     private Double totalAmount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private LocalDateTime checkIn;
 }
