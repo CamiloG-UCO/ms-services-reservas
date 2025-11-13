@@ -31,14 +31,20 @@ public class ReservationService {
 
     @Transactional
     public ReservationResponse createReservation(ReservationRequest request, String username) {
+        log.info("Creating reservation for user: {} and room: {}", username, request.getRoomId());
+
+        // Validate dates
         validateReservationDates(request.getStartDate(), request.getEndDate());
 
+        // Get user information
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + username));
 
+        // Get room information and validate availability
         Room room = roomRepository.findByIdAndStatus(request.getRoomId(), "disponible")
                 .orElseThrow(() -> new RuntimeException("Habitación no disponible o no encontrada"));
 
+        // Check for conflicting reservations
         List<Reservation> conflicts = reservationRepository.findConflictingReservations(
                 request.getRoomId(), request.getStartDate(), request.getEndDate());
         
@@ -46,12 +52,14 @@ public class ReservationService {
             throw new RuntimeException("La habitación no está disponible para las fechas seleccionadas");
         }
 
+        // Calculate total amount
         long nights = ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate());
         if (nights <= 0) {
             throw new RuntimeException("La fecha de fin debe ser posterior a la fecha de inicio");
         }
         double totalAmount = nights * room.getPricePerNight();
 
+        // Create reservation
         Reservation reservation = new Reservation();
         reservation.setReservationCode(generateReservationCode());
         reservation.setUserId(user.getId());
@@ -68,8 +76,10 @@ public class ReservationService {
         reservation.setCreatedAt(LocalDateTime.now());
         reservation.setUpdatedAt(LocalDateTime.now());
 
+        // Save reservation
         Reservation savedReservation = reservationRepository.save(reservation);
 
+        // Send confirmation email asynchronously
         try {
             emailService.sendReservationConfirmation(savedReservation);
         } catch (Exception e) {
@@ -78,6 +88,7 @@ public class ReservationService {
 
         log.info("Reservation created successfully with code: {}", savedReservation.getReservationCode());
 
+        // Return response
         return mapToResponse(savedReservation, "Habitación reservada con éxito, código de reserva " + savedReservation.getReservationCode());
     }
 
