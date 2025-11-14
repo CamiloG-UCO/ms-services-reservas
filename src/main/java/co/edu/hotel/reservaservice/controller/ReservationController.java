@@ -2,8 +2,6 @@ package co.edu.hotel.reservaservice.controller;
 
 import co.edu.hotel.reservaservice.dto.ReservationRequest;
 import co.edu.hotel.reservaservice.dto.ReservationResponse;
-import co.edu.hotel.reservaservice.model.Bill;
-import co.edu.hotel.reservaservice.services.BillService;
 import co.edu.hotel.reservaservice.services.ReservationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +21,6 @@ import java.util.List;
 public class ReservationController {
 
     private final ReservationService reservationService;
-    private final BillService billService;
 
     @PostMapping
     public ResponseEntity<ReservationResponse> createReservation(
@@ -77,19 +74,6 @@ public class ReservationController {
             ReservationResponse errorResponse = new ReservationResponse();
             errorResponse.setMessage("Error al obtener la reserva: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
-        }
-    }
-
-    @PutMapping("/check-out/{reservationCode}")
-    public ResponseEntity<Bill> checkOutReservation(
-            @PathVariable String reservationCode
-    ) {
-        try {
-            Bill bill = billService.createBill(reservationCode);
-            return ResponseEntity.ok(bill);
-        } catch (Exception e) {
-            log.error("Error checking out reservation: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

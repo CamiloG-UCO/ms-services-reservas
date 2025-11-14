@@ -10,7 +10,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
@@ -57,17 +60,21 @@ public class CancelarReservaStepDefinitions {
                 new Date()
         );
 
-        when(bookingRepository.findByRoomCodeAndClientEmail(eq(codigo), anyString()))
-                .thenReturn(reservaExistente);
+        List<Booking> listaReservas = new ArrayList<>();
+        listaReservas.add(reservaExistente);
 
-        doNothing().when(bookingRepository).delete(any(Booking.class));
+        when(bookingRepository.findByRoomCodeAndClientEmail(eq(codigo), anyString()))
+                .thenReturn(listaReservas);
+
+        when(bookingRepository.save(any(Booking.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     @Dado("no existe una reserva con código {string} para el usuario {string}")
     public void no_existe_una_reserva_con_codigo_para_el_usuario(String codigo, String usuario) {
         this.codigoReserva = codigo;
         when(bookingRepository.findByRoomCodeAndClientEmail(eq(codigo), anyString()))
-                .thenReturn(null);
+                .thenReturn(Collections.emptyList());
     }
 
     @Dado("el correo del usuario es {string}")
@@ -77,14 +84,15 @@ public class CancelarReservaStepDefinitions {
 
     @Dado("el servicio de base de datos presenta un error temporal")
     public void el_servicio_de_base_de_datos_presenta_un_error_temporal() {
-        reset(bookingRepository);
+        List<Booking> listaReservas = new ArrayList<>();
+        listaReservas.add(reservaExistente);
 
         when(bookingRepository.findByRoomCodeAndClientEmail(anyString(), anyString()))
-                .thenReturn(reservaExistente);
+                .thenReturn(listaReservas);
 
         doThrow(new RuntimeException("Error temporal de base de datos"))
                 .when(bookingRepository)
-                .delete(any(Booking.class));
+                .save(any(Booking.class));
     }
 
     @Dado("el correo del usuario no encontrado")
@@ -108,9 +116,11 @@ public class CancelarReservaStepDefinitions {
         } catch (IllegalArgumentException e) {
             eliminacionExitosa = false;
             mensajeSistema = e.getMessage();
+            correoEnviado = false;
         } catch (RuntimeException e) {
             eliminacionExitosa = false;
             mensajeSistema = e.getMessage();
+            correoEnviado = false;
         }
     }
 
@@ -118,7 +128,7 @@ public class CancelarReservaStepDefinitions {
     @Entonces("el sistema debe eliminar la reserva con código {string}")
     public void el_sistema_debe_eliminar_la_reserva_con_codigo(String codigo) {
         assertTrue("La eliminación no fue exitosa", eliminacionExitosa);
-        verify(bookingRepository).delete(any(Booking.class));
+        verify(bookingRepository, atLeastOnce()).save(any(Booking.class));
     }
 
     @Entonces("mostrar el mensaje {string}")

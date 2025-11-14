@@ -37,21 +37,21 @@ public class EmailService {
         }
     }
 
-    public void sendBill(Bill bill) {
+    public void sendCancellationEmail(Reservation reservation) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
-            message.setTo(bill.getEmail());
-            message.setSubject("Factura de check-out - " + bill.getCode());
+            message.setTo(reservation.getUserEmail());
+            message.setSubject("Cancelación de Reserva - " + reservation.getReservationCode());
 
-            String emailBody = buildBillnEmailBody(bill);
+            String emailBody = buildCancellationEmailBody(reservation);
             message.setText(emailBody);
 
             mailSender.send(message);
-            log.info("Confirmation email sent to: {}", bill.getEmail());
+            log.info("Cancellation email sent to: {}", reservation.getUserEmail());
 
         } catch (Exception e) {
-            log.error("Error sending confirmation email to: {}", bill.getEmail(), e);
+            log.error("Error sending cancellation email to: {}", reservation.getUserEmail(), e);
         }
     }
 
@@ -79,27 +79,30 @@ public class EmailService {
         );
     }
 
-    private String buildBillnEmailBody(Bill  bill) {
+    private String buildCancellationEmailBody(Reservation reservation) {
         return String.format(
-                "Estimado/a %s,\n\n" +
-                "Su check-out ha sido completado exitosamente.\n\n" +
-                "Detalles de la factura:\n" +
-                "- Código: %s\n" +
-                "- Código de reserva: %s\n" +
-                "- Total: %s\n" +
-                "- Fecha: %s\n" +
-                "- Hotel: %s\n" +
-                "- Habitación: %s\n" +
-                "Gracias por elegirnos.\n\n" +
-                "Atentamente,\n" +
-                "Equipo de Reservas",
-                bill.getUsername(),
-                bill.getCode(),
-                bill.getReservationCode(),
-                bill.getTotal(),
-                bill.getDate(),
-                bill.getHotel(),
-                bill.getRoom()
+            "Estimado/a %s,\n\n" +
+            "Su reserva ha sido cancelada exitosamente.\n\n" +
+            "Detalles de la reserva cancelada:\n" +
+            "- Código de reserva: %s\n" +
+            "- Hotel: %s\n" +
+            "- Habitación: %s\n" +
+            "- Fecha de inicio: %s\n" +
+            "- Fecha de fin: %s\n" +
+            "- Monto: $%.2f\n\n" +
+            "Si tiene alguna pregunta, no dude en contactarnos.\n\n" +
+            "Atentamente,\n" +
+            "Equipo de Reservas",
+            reservation.getUsername(),
+            reservation.getReservationCode(),
+            reservation.getHotelName(),
+            reservation.getRoomName(),
+            reservation.getStartDate(),
+            reservation.getEndDate(),
+            reservation.getTotalAmount()
         );
+    }
+
+    public void sendBill(Bill savedBill) {
     }
 }
