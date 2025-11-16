@@ -3,9 +3,11 @@ package co.edu.hotel.reservaservice.repository;
 import co.edu.hotel.reservaservice.model.Reservation;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.mongodb.repository.Update;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,4 +28,8 @@ public interface ReservationRepository extends MongoRepository<Reservation, Stri
     List<Reservation> findConflictingReservations(String roomId, LocalDate startDate, LocalDate endDate);
 
     Optional<Reservation> findByidAndStatus(String reservationCode, String status);
+
+    @Query("{ 'reservationCode': ?0 }")
+    @Update("{ '$set': { 'checkIn': ?1, 'status': 'ocupada' } }")
+    void checkIn(String reservationCode, LocalDateTime checkInDate);
 }

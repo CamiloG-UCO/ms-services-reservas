@@ -19,7 +19,7 @@ import java.util.List;
 @RequestMapping("/api/v1/reservations")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:4200")
 public class ReservationController {
 
     private final ReservationService reservationService;
@@ -90,6 +90,17 @@ public class ReservationController {
         } catch (Exception e) {
             log.error("Error checking out reservation: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PatchMapping("/check-in/{reservationCode}")
+    public ResponseEntity<String> checkInReservation(@PathVariable String reservationCode) {
+        try {
+            reservationService.checkIn(reservationCode);
+            return ResponseEntity.ok("Check-In exitoso.");
+        } catch (Exception e) {
+            log.error("Error checking in reservation: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
 }

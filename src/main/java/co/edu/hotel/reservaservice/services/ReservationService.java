@@ -121,6 +121,17 @@ public class ReservationService {
         return "R-" + code;
     }
 
+    public void checkIn(String reservationCode) {
+        Reservation reservation = reservationRepository.findByReservationCode(reservationCode)
+                .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
+
+        if (reservation.getCheckIn() != null) {
+            throw new RuntimeException("El Check-In ya se realizó para la reserva con código " + reservationCode);
+        }
+
+        reservationRepository.checkIn(reservationCode, LocalDateTime.now());
+    }
+
     private ReservationResponse mapToResponse(Reservation reservation, String message) {
         ReservationResponse response = new ReservationResponse();
         response.setId(reservation.getId());
@@ -135,6 +146,7 @@ public class ReservationService {
         response.setTotalAmount(reservation.getTotalAmount());
         response.setCreatedAt(reservation.getCreatedAt());
         response.setMessage(message);
+        response.setCheckIn(reservation.getCheckIn() != null ? reservation.getCheckIn() : null);
         return response;
     }
 }

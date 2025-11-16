@@ -23,4 +23,5 @@ public class ReservationResponse {
     private Double totalAmount;
     private LocalDateTime createdAt;
     private String message;
+    private LocalDateTime checkIn;
 }
